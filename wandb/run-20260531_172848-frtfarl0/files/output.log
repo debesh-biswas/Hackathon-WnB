@@ -1,0 +1,110 @@
+
+ContextCore context overflow test  |  W&B run: overflow-test-20260531-172846
+Fill rounds : 7
+Window size : 6 turns for BOTH modes — only difference is vector store retrieval
+Anchor scrolls out of the shared window after turn 4.
+
+  [memories cleared]
+
+==============================================================
+  MODE: BASELINE  |  session: baseline_f4cbdbfe
+==============================================================
+
+Turn 1 — planting anchor facts...
+  Response  : 1. Your secret codeword is AURORA-7734.
+2. You are working on a project called Project Nebula.
+3. Your lucky number ...
+  Tokens    : 127  |  latency: — ms
+
+Fill rounds (7) — pushing anchor out of the 6-turn window...
+
+Turn 2 — How does TCP/IP congestion control work? Explain slow start and C...
+  Turn  2 | tokens: 177 | latency: — ms
+Turn 3 — What are the main differences between REST and GraphQL APIs?...
+  Turn  3 | tokens: 488 | latency: — ms
+Turn 4 — Explain how Docker containers differ from virtual machines....
+  Turn  4 | tokens: 854 | latency: — ms
+Turn 5 — How does a B-tree index improve database query performance?...
+  Turn  5 | tokens: 1176 | latency: — ms
+Turn 6 — What is the CAP theorem and how do distributed databases navigate...
+  Turn  6 | tokens: 1073 | latency: — ms
+Turn 7 — How does the transformer attention mechanism work at a high level...
+  Turn  7 | tokens: 974 | latency: — ms
+Turn 8 — What is the difference between optimistic and pessimistic locking...
+  Turn  8 | tokens: 831 | latency: — ms
+
+Recall probes — anchor planted 7 turns ago...
+
+  Q: What was my secret codeword? Reply with just the codeword itself.
+  A: 'sunflower'
+  Q: What is the name of my project? Reply with just the project name.
+  A: 'Project Horizon'
+  Q: What is my lucky number? Reply with just the number.
+  A: '7'
+
+  Results for BASELINE:
+          codeword: [FAIL]  expected='AURORA-7734'  got='sunflower'
+           project: [FAIL]  expected='Project Nebula'  got='Project Horizon'
+      lucky_number: [FAIL]  expected='8291'  got='7'
+  [memories cleared]
+
+==============================================================
+  MODE: CONTEXTCORE  |  session: contextcore_c1e5e924
+==============================================================
+
+Turn 1 — planting anchor facts...
+  Response  : 1. Your secret codeword is AURORA-7734.
+2. You are working on a project called Project Nebula.
+3. Your lucky number ...
+  Tokens    : 132  |  latency: 664 ms
+
+Fill rounds (7) — pushing anchor out of the 6-turn window...
+
+Turn 2 — How does TCP/IP congestion control work? Explain slow start and C...
+  Turn  2 | tokens: 192 | latency: 1087 ms
+Turn 3 — What are the main differences between REST and GraphQL APIs?...
+  Turn  3 | tokens: 449 | latency: 1317 ms
+Turn 4 — Explain how Docker containers differ from virtual machines....
+  Turn  4 | tokens: 754 | latency: 1403 ms
+Turn 5 — How does a B-tree index improve database query performance?...
+  Turn  5 | tokens: 987 | latency: 1307 ms
+Turn 6 — What is the CAP theorem and how do distributed databases navigate...
+  Turn  6 | tokens: 990 | latency: 1170 ms
+Turn 7 — How does the transformer attention mechanism work at a high level...
+  Turn  7 | tokens: 954 | latency: 1292 ms
+Turn 8 — What is the difference between optimistic and pessimistic locking...
+  Turn  8 | tokens: 928 | latency: 754 ms
+
+  Vector store check: anchor ✅ found (36 total facts)
+
+Recall probes — anchor planted 7 turns ago...
+
+  Q: What was my secret codeword? Reply with just the codeword itself.
+  A: 'AURORA-7734'
+  Retrieved: 1 fact(s) — "User's secret codeword is AURORA-7734"
+  Q: What is the name of my project? Reply with just the project name.
+  A: 'Project Nebula'
+  Retrieved: 1 fact(s) — "User is working on a project called Proj"
+  Q: What is my lucky number? Reply with just the number.
+  A: '8291'
+  Retrieved: 1 fact(s) — "User's lucky number is 8291"
+
+  Results for CONTEXTCORE:
+          codeword: [PASS]  expected='AURORA-7734'  got='AURORA-7734'
+           project: [PASS]  expected='Project Nebula'  got='Project Nebula'
+      lucky_number: [PASS]  expected='8291'  got='8291'
+
+──────────────────────────────────────────────────────────────
+                       FINAL COMPARISON
+──────────────────────────────────────────────────────────────
+  Fact                 Baseline      ContextCore
+──────────────────────────────────────────────────────────────
+  codeword              FAIL ✗          PASS ✓
+  project               FAIL ✗          PASS ✓
+  lucky_number          FAIL ✗          PASS ✓
+──────────────────────────────────────────────────────────────
+  ACCURACY                     0%           100%
+  TOTAL TOKENS             7,444         7,245
+──────────────────────────────────────────────────────────────
+
+  ContextCore outperformed baseline by 100 pp.

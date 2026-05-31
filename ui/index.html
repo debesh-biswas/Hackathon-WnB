@@ -230,6 +230,80 @@
     .contradiction-banner strong { display: block; margin-bottom: 4px; }
     .contradiction-banner ul { padding-left: 16px; }
 
+    /* ── Turn timeline ── */
+    .timeline-area {
+      padding: 8px 16px 6px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .timeline-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 18px;
+    }
+
+    .timeline-mode-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      width: 76px;
+      flex-shrink: 0;
+      color: var(--text-muted);
+    }
+
+    .timeline-dots {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .tl-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+      cursor: default;
+      transition: transform 0.15s;
+    }
+    .tl-dot:hover { transform: scale(1.4); }
+
+    /* Baseline: in-window = blue, out-of-window = dark grey */
+    .tl-dot.tl-in  { background: #3b82f6; box-shadow: 0 0 4px #3b82f688; }
+    .tl-dot.tl-out { background: #374151; border: 1px solid #4b5563; }
+
+    /* ContextCore: all turns accessible via memory = green */
+    .tl-dot.tl-memory { background: var(--success); box-shadow: 0 0 4px #4caf5066; }
+
+    .timeline-legend {
+      display: flex;
+      gap: 12px;
+      margin-top: 2px;
+      padding-left: 84px;
+    }
+
+    .tl-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.6rem;
+      color: var(--text-muted);
+    }
+
+    .tl-legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
     /* Chat input area */
     .chat-input-area {
       padding: 14px 16px;
@@ -375,6 +449,7 @@
       flex-shrink: 0;
       font-size: 0.78rem;
       color: var(--text-muted);
+      flex-wrap: wrap;
     }
 
     .stat {
@@ -391,6 +466,44 @@
     .stat-value { color: var(--text-primary); }
     #grounding-value.passed { color: var(--success); }
     #grounding-value.contradiction { color: var(--warning); }
+
+    /* Memory hit counter */
+    #memory-hits-value { color: var(--success); font-weight: 700; }
+
+    /* Context bar stats */
+    .stat-bar {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      padding: 6px 14px;
+    }
+
+    .stat-bar-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ctx-bar-track {
+      width: 100px;
+      height: 6px;
+      background: var(--bg-primary);
+      border-radius: 3px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .ctx-bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 3px;
+      transition: width 0.4s ease, background-color 0.4s ease;
+      background: var(--success);
+    }
+
+    /* color tiers applied via JS */
+    .ctx-bar-fill.warn  { background: var(--warning); }
+    .ctx-bar-fill.crit  { background: var(--accent); }
 
     /* ── A/B Mode toggle ── */
     .toggle input:checked + .toggle-slider.ab-slider { background: #7c3aed; }
@@ -485,6 +598,42 @@
 
     .ab-side-text { color: var(--text-primary); }
 
+    /* ── Memory callout (CC side) ── */
+    .memory-callout {
+      background: #1a3a1f;
+      border: 1px solid #2e5c34;
+      border-radius: 6px;
+      padding: 5px 9px;
+      font-size: 0.72rem;
+      color: #86efac;
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+
+    .memory-callout-icon { margin-right: 3px; }
+
+    .memory-callout-fact {
+      display: inline-block;
+      background: #14532d33;
+      border-radius: 3px;
+      padding: 1px 4px;
+      margin: 1px 2px;
+      font-family: monospace;
+      font-size: 0.7rem;
+      color: #bbf7d0;
+    }
+
+    /* ── Window warning (Baseline side) ── */
+    .window-warn {
+      background: #422006;
+      border: 1px solid #92400e;
+      border-radius: 6px;
+      padding: 5px 9px;
+      font-size: 0.72rem;
+      color: var(--warning);
+      margin-top: 8px;
+    }
+
     /* ── Thinking pair ── */
     .ab-thinking {
       display: none;
@@ -542,6 +691,29 @@
         </div>
       </div>
 
+      <!-- Turn timeline -->
+      <div class="timeline-area" id="timeline-area">
+        <div class="timeline-row">
+          <span class="timeline-mode-label baseline-tl-label">Baseline</span>
+          <div class="timeline-dots" id="baseline-timeline"></div>
+        </div>
+        <div class="timeline-row">
+          <span class="timeline-mode-label cc-tl-label" style="color: var(--success);">ContextCore</span>
+          <div class="timeline-dots" id="cc-timeline"></div>
+        </div>
+        <div class="timeline-legend">
+          <div class="tl-legend-item">
+            <span class="tl-legend-dot" style="background:#3b82f6;"></span>In window
+          </div>
+          <div class="tl-legend-item">
+            <span class="tl-legend-dot" style="background:#374151; border:1px solid #4b5563;"></span>Out of window
+          </div>
+          <div class="tl-legend-item">
+            <span class="tl-legend-dot" style="background:var(--success);"></span>In memory
+          </div>
+        </div>
+      </div>
+
       <div class="chat-input-area">
         <textarea
           id="msg-input"
@@ -576,26 +748,41 @@
       <span class="stat-value" id="grounding-value">–</span>
     </div>
     <div class="stat">
+      <span class="stat-label">Memory Hits:</span>
+      <span class="stat-value" id="memory-hits-value">0 / 0</span>
+    </div>
+    <div class="stat">
       <span class="stat-label">Baseline tokens:</span>
       <span class="stat-value" id="baseline-token-value">0</span>
     </div>
-    <div class="stat">
-      <span class="stat-label">Baseline ctx:</span>
-      <span class="stat-value" id="baseline-ctx-value">0%</span>
+    <div class="stat stat-bar">
+      <div class="stat-bar-header">
+        <span class="stat-label">Baseline ctx</span>
+        <span class="stat-value" id="baseline-ctx-pct">0%</span>
+      </div>
+      <div class="ctx-bar-track">
+        <div class="ctx-bar-fill" id="baseline-ctx-bar"></div>
+      </div>
     </div>
     <div class="stat">
       <span class="stat-label">CC tokens:</span>
       <span class="stat-value" id="cc-token-value">0</span>
     </div>
-    <div class="stat">
-      <span class="stat-label">CC ctx:</span>
-      <span class="stat-value" id="cc-ctx-value">0%</span>
+    <div class="stat stat-bar">
+      <div class="stat-bar-header">
+        <span class="stat-label">CC ctx</span>
+        <span class="stat-value" id="cc-ctx-pct">0%</span>
+      </div>
+      <div class="ctx-bar-track">
+        <div class="ctx-bar-fill" id="cc-ctx-bar"></div>
+      </div>
     </div>
   </footer>
 
   <script>
     // ── State ──────────────────────────────────────────────
-    const CONTEXT_WINDOW = 33000; // gemma-3n-e4b-it token limit
+    const CONTEXT_WINDOW = 32768; // Qwen3-14B-Instruct hard limit
+    const WINDOW_TURNS   = 3;     // 6 messages = 3 user/assistant exchanges per window
     const abSessionCC       = crypto.randomUUID();
     const abSessionBaseline = crypto.randomUUID();
     let turnCount    = 0;
@@ -603,8 +790,9 @@
     let demoRunning  = false;
     let cumulativeCCTokens       = 0;
     let cumulativeBaselineTokens = 0;
-    let lastCCTokens       = 0; // this turn's request size (for ctx%)
+    let lastCCTokens       = 0;
     let lastBaselineTokens = 0;
+    let ccMemoryHits = 0; // turns where CC retrieved at least one fact
 
     // ── DOM refs ───────────────────────────────────────────
     const msgInput       = document.getElementById('msg-input');
@@ -623,9 +811,14 @@
     const memoriesValue      = document.getElementById('memories-value');
     const groundingValue     = document.getElementById('grounding-value');
     const baselineTokenValue = document.getElementById('baseline-token-value');
-    const baselineCtxValue   = document.getElementById('baseline-ctx-value');
+    const baselineCtxPct     = document.getElementById('baseline-ctx-pct');
+    const baselineCtxBar     = document.getElementById('baseline-ctx-bar');
     const ccTokenValue       = document.getElementById('cc-token-value');
-    const ccCtxValue         = document.getElementById('cc-ctx-value');
+    const ccCtxPct           = document.getElementById('cc-ctx-pct');
+    const ccCtxBar           = document.getElementById('cc-ctx-bar');
+    const memoryHitsValue    = document.getElementById('memory-hits-value');
+    const baselineTimeline   = document.getElementById('baseline-timeline');
+    const ccTimeline         = document.getElementById('cc-timeline');
 
     // ── Error helpers ──────────────────────────────────────
     function showError(msg) {
@@ -666,7 +859,6 @@
       label.className = 'msg-label';
       label.textContent = role === 'user' ? 'You' : 'ContextCore';
 
-      // Contradiction warning (assistant only)
       if (role === 'assistant' && groundingPassed === false && contradictions && contradictions.length > 0) {
         const warn = document.createElement('div');
         warn.className = 'contradiction-banner';
@@ -682,52 +874,84 @@
       row.appendChild(label);
       row.appendChild(bubble);
 
-      // Insert BEFORE the thinking indicator
       chatMessages.insertBefore(row, thinkingEl);
       scrollToBottom();
     }
 
     // ── Append A/B side-by-side bubble ────────────────────
-    function appendABBubble(ccText, baselineText, ccTokens, baselineTokens) {
+    function appendABBubble(ccText, baselineText, ccTokens, baselineTokens, usedMemories, tc) {
       const wrapper = document.createElement('div');
       wrapper.className = 'ab-row';
 
-      // Baseline side (LEFT)
+      // ── Baseline side (LEFT) ──
       const baseSide = document.createElement('div');
       baseSide.className = 'ab-side baseline-side';
+
       const baseLabel = document.createElement('div');
       baseLabel.className = 'ab-side-label';
-      baseLabel.textContent = 'Baseline (Full History)';
+      baseLabel.textContent = `Baseline (last ${WINDOW_TURNS}-turn window)`;
+
       const baseContent = document.createElement('div');
       baseContent.className = 'ab-side-text';
       baseContent.textContent = baselineText;
+
+      // Outside-window warning: anchor turns older than WINDOW_TURNS are gone
+      if (tc > WINDOW_TURNS) {
+        const lostCount = tc - WINDOW_TURNS;
+        const warn = document.createElement('div');
+        warn.className = 'window-warn';
+        warn.textContent = `⚠️ Turns 1–${lostCount} are outside the ${WINDOW_TURNS}-turn window — facts from those turns are gone`;
+        baseSide.appendChild(baseLabel);
+        baseSide.appendChild(baseContent);
+        baseSide.appendChild(warn);
+      } else {
+        baseSide.appendChild(baseLabel);
+        baseSide.appendChild(baseContent);
+      }
+
       const baseTokenEl = document.createElement('div');
       baseTokenEl.className = 'ab-side-tokens';
-      baseTokenEl.textContent = baselineTokens ? `~${baselineTokens.toLocaleString()} tokens` : '';
-      baseSide.appendChild(baseLabel);
-      baseSide.appendChild(baseContent);
+      baseTokenEl.textContent = baselineTokens ? `~${baselineTokens.toLocaleString()} tokens this turn` : '';
       baseSide.appendChild(baseTokenEl);
 
-      // ContextCore side (RIGHT)
+      // ── ContextCore side (RIGHT) ──
       const ccSide = document.createElement('div');
       ccSide.className = 'ab-side cc-side';
+
       const ccLabel = document.createElement('div');
       ccLabel.className = 'ab-side-label';
       ccLabel.textContent = 'ContextCore ✅';
+
       const ccContent = document.createElement('div');
       ccContent.className = 'ab-side-text';
       ccContent.textContent = ccText;
-      const ccTokenEl = document.createElement('div');
-      ccTokenEl.className = 'ab-side-tokens';
-      ccTokenEl.textContent = ccTokens ? `~${ccTokens.toLocaleString()} tokens` : '';
+
       ccSide.appendChild(ccLabel);
       ccSide.appendChild(ccContent);
+
+      // Memory callout: show retrieved facts with scores
+      if (usedMemories && usedMemories.length > 0) {
+        const callout = document.createElement('div');
+        callout.className = 'memory-callout';
+
+        const factsHtml = usedMemories.slice(0, 3).map(m => {
+          const txt = (m.text || '').slice(0, 55);
+          const scoreStr = m.score != null ? ` (${Number(m.score).toFixed(2)})` : '';
+          return `<span class="memory-callout-fact">${escapeHtml(txt)}${escapeHtml(scoreStr)}</span>`;
+        }).join(' ');
+
+        callout.innerHTML = `<span class="memory-callout-icon">📎</span> Retrieved from memory: ${factsHtml}`;
+        ccSide.appendChild(callout);
+      }
+
+      const ccTokenEl = document.createElement('div');
+      ccTokenEl.className = 'ab-side-tokens';
+      ccTokenEl.textContent = ccTokens ? `~${ccTokens.toLocaleString()} tokens this turn` : '';
       ccSide.appendChild(ccTokenEl);
 
-      wrapper.appendChild(baseSide);   // baseline = left
-      wrapper.appendChild(ccSide);     // ContextCore = right
+      wrapper.appendChild(baseSide);
+      wrapper.appendChild(ccSide);
 
-      // Insert before the ab-thinking indicator
       chatMessages.insertBefore(wrapper, abThinkingEl);
       scrollToBottom();
     }
@@ -789,7 +1013,6 @@
           return;
         }
 
-        // Sort reverse-chronological
         const sorted = [...all].sort((a, b) => (b.ts || 0) - (a.ts || 0));
         memoriesValue.textContent = sorted.length;
 
@@ -829,9 +1052,42 @@
       }
     }
 
+    // ── Context bar helper ─────────────────────────────────
+    function setCtxBar(barEl, pctEl, tokens) {
+      const pct = Math.min(100, (tokens / CONTEXT_WINDOW) * 100);
+      barEl.style.width = pct.toFixed(1) + '%';
+      pctEl.textContent = pct.toFixed(1) + '%';
+
+      barEl.classList.remove('warn', 'crit');
+      if (pct >= 85) barEl.classList.add('crit');
+      else if (pct >= 60) barEl.classList.add('warn');
+    }
+
+    // ── Turn timeline ──────────────────────────────────────
+    function updateTimeline(tc) {
+      baselineTimeline.innerHTML = '';
+      ccTimeline.innerHTML = '';
+
+      for (let i = 1; i <= tc; i++) {
+        // Baseline: last WINDOW_TURNS exchanges are in-window, older ones are lost
+        const bdot = document.createElement('span');
+        const inWindow = i > tc - WINDOW_TURNS;
+        bdot.className = 'tl-dot ' + (inWindow ? 'tl-in' : 'tl-out');
+        bdot.title = `Turn ${i}: ${inWindow ? 'in sliding window' : 'outside window — forgotten'}`;
+        baselineTimeline.appendChild(bdot);
+
+        // ContextCore: full history + vector memory, no window
+        const cdot = document.createElement('span');
+        cdot.className = 'tl-dot tl-memory';
+        cdot.title = `Turn ${i}: full history + retrievable via vector memory`;
+        ccTimeline.appendChild(cdot);
+      }
+    }
+
     // ── Update footer ──────────────────────────────────────
     function updateFooter(tc, gp) {
       turnValue.textContent = tc;
+
       groundingValue.className = '';
       if (gp === null || gp === undefined) {
         groundingValue.textContent = '–';
@@ -842,14 +1098,14 @@
         groundingValue.textContent = '⚠️ contradiction';
         groundingValue.className = 'contradiction';
       }
-      // ctx% = this turn's request size / context window (shows how full the window is NOW)
-      // tokens = cumulative across all turns (shows total cost)
-      const basePct = Math.min(100, (lastBaselineTokens / CONTEXT_WINDOW * 100)).toFixed(1);
-      const ccPct   = Math.min(100, (lastCCTokens       / CONTEXT_WINDOW * 100)).toFixed(1);
+
       baselineTokenValue.textContent = cumulativeBaselineTokens.toLocaleString();
-      baselineCtxValue.textContent   = `${basePct}%`;
-      ccTokenValue.textContent       = cumulativeCCTokens.toLocaleString();
-      ccCtxValue.textContent         = `${ccPct}%`;
+      setCtxBar(baselineCtxBar, baselineCtxPct, lastBaselineTokens);
+
+      ccTokenValue.textContent = cumulativeCCTokens.toLocaleString();
+      setCtxBar(ccCtxBar, ccCtxPct, lastCCTokens);
+
+      memoryHitsValue.textContent = `${ccMemoryHits} / ${tc}`;
     }
 
     // ── Rate-limit error helper ────────────────────────────
@@ -886,7 +1142,6 @@
 
     // ── Send in A/B Mode ───────────────────────────────────
     async function sendMessageAB(text) {
-      // Insert user bubble anchored to abThinkingEl so it interleaves with AB rows
       const userRow = document.createElement('div');
       userRow.className = 'msg-row user';
       const userLabel = document.createElement('div');
@@ -915,8 +1170,20 @@
         cumulativeCCTokens       += lastCCTokens;
         cumulativeBaselineTokens += lastBaselineTokens;
 
-        appendABBubble(ccData.response, baseData.response, ccData.tokenEstimate, baseData.tokenEstimate);
+        // Track memory hit rate
+        if (memoriesUsed.length > 0) ccMemoryHits++;
+
+        appendABBubble(
+          ccData.response,
+          baseData.response,
+          ccData.tokenEstimate,
+          baseData.tokenEstimate,
+          memoriesUsed,
+          turnCount
+        );
+
         updateFooter(turnCount, ccData.groundingPassed);
+        updateTimeline(turnCount);
         await refreshMemories(memoriesUsed);
       } catch (err) {
         showError(err.message);
@@ -951,7 +1218,6 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Reset failed');
 
-        // Clear chat messages (keep the thinking + ab-thinking indicators)
         const rows = chatMessages.querySelectorAll('.msg-row, .contradiction-banner, .ab-row');
         rows.forEach(el => el.remove());
 
@@ -962,8 +1228,10 @@
         cumulativeBaselineTokens = 0;
         lastCCTokens = 0;
         lastBaselineTokens = 0;
-        updateFooter(0, null);
+        ccMemoryHits = 0;
 
+        updateFooter(0, null);
+        updateTimeline(0);
         await refreshMemories([]);
       } catch (err) {
         showError(err.message);
@@ -991,30 +1259,14 @@
       "Explain microservices architecture — benefits, drawbacks, and when it makes sense.",
     ];
 
-    // 5 setup → 4 filler (9 total) → 3 recall
     function buildDemoPlan() {
       const plan = [];
-
-      // Turns 1-5: introduce name, stack, language, bug, customer
-      for (let i = 0; i < 5; i++) {
-        plan.push({ text: SETUP_MESSAGES[i] });
-      }
-
-      // Turns 6-9: filler (all setup exits baseline window of 5 msgs by turn 9)
-      for (let i = 0; i < 4; i++) {
-        plan.push({ text: FILLER_MESSAGES[i] });
-      }
-
-      // Turn 10: recall — database
+      for (let i = 0; i < 5; i++) plan.push({ text: SETUP_MESSAGES[i] });
+      for (let i = 0; i < 4; i++) plan.push({ text: FILLER_MESSAGES[i] });
       plan.push({ text: "By the way, what database are we using in our stack?" });
-
-      // Turn 11: recall — language
       plan.push({ text: "And what language does my team write in?" });
-
-      // Turn 12: grounding — contradiction
       plan.push({ text: "Actually we switched to MongoDB last month." });
-
-      return plan; // 12 turns
+      return plan;
     }
 
     // ── Run Demo ──────────────────────────────────────────
@@ -1024,7 +1276,6 @@
       const ok = confirm('This will reset memories and run the 12-turn demo. Continue?');
       if (!ok) return;
 
-      // Reset first
       await doReset();
 
       demoRunning = true;
@@ -1039,12 +1290,10 @@
       for (let i = 0; i < plan.length; i++) {
         const turn = i + 1;
         demoStatusText.textContent = `Demo running… Turn ${turn}/${plan.length}`;
-
         await delay(1500);
         await sendMessage(plan[i].text);
       }
 
-      // Done
       demoRunning = false;
       btnDemo.disabled = false;
       btnReset.disabled = false;

@@ -47,7 +47,7 @@ export async function runMemoryWrite(userMsg, assistantMsg, client, store) {
     const userContent = `User said: "${userMsg}"\nAssistant said: "${assistantMsg}"`;
 
     const res = await client.chat.completions.create({
-      model: 'google/gemma-3n-e4b-it',
+      model: 'OpenPipe/Qwen3-14B-Instruct',
       max_tokens: 400,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },

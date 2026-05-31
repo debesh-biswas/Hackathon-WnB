@@ -16,7 +16,7 @@ export async function runRelevanceDecision(candidates, message, client) {
   const factsList = candidates.map((m, i) => `[${i}] ${m.text}`).join('\n');
   try {
     const res = await client.chat.completions.create({
-      model: 'google/gemma-3n-e4b-it',
+      model: 'OpenPipe/Qwen3-14B-Instruct',
       max_tokens: 150,
       messages: [
         { role: 'system', content: SYSTEM },

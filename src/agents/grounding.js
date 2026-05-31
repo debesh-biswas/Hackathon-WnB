@@ -5,7 +5,7 @@ export async function runGrounding(response, memories, client) {
   const memoryContext = memories.map(m => `- ${m.text}`).join('\n');
 
   const res = await client.chat.completions.create({
-    model: 'google/gemma-3n-e4b-it',
+    model: 'OpenPipe/Qwen3-14B-Instruct',
     max_tokens: 600,
     messages: [
       {

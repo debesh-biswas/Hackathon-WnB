@@ -15,8 +15,8 @@ app.use(express.json());
 app.use(express.static(join(__dirname, '../ui')));
 
 const client = new OpenAI({
-  apiKey: process.env.NVIDIA_API_KEY,
-  baseURL: 'https://integrate.api.nvidia.com/v1',
+  apiKey: process.env.WANDB_API_KEY,
+  baseURL: 'https://api.inference.wandb.ai/v1',
 });
 const store = createStore();
 const sessions = {}; // keyed by sessionId, each value is array of { role, content }
@@ -39,15 +39,15 @@ app.post('/chat', async (req, res) => {
     if (useContextCore === true) {
       result = await runPipeline(message, sessions[sessionId], store, client);
     } else {
-      // Baseline: sliding window — last 5 messages (~2 exchanges)
+      // Baseline: 6-turn sliding window, no memory — older turns are forgotten
       const baselineMessages = [
-        ...sessions[sessionId].slice(-5),
+        ...sessions[sessionId].slice(-6),
         { role: 'user', content: message },
       ];
       const BASELINE_SYSTEM = 'You are a helpful assistant. Answer only what the user asked — nothing more, nothing less. Match your response length to the question: technical questions deserve thorough answers, simple ones get short ones. Never append unsolicited context, follow-up notes, or information about previous topics.';
       const totalChars = BASELINE_SYSTEM.length + baselineMessages.reduce((sum, m) => sum + (m.content?.length || 0), 0);
       const raw = await client.chat.completions.create({
-        model: 'google/gemma-3n-e4b-it',
+        model: 'OpenPipe/Qwen3-14B-Instruct',
         max_tokens: 1000,
         messages: [
           { role: 'system', content: BASELINE_SYSTEM },

@@ -2,17 +2,15 @@ import 'dotenv/config';
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-  apiKey: process.env.NVIDIA_API_KEY,
-  baseURL: 'https://integrate.api.nvidia.com/v1',
+  apiKey: process.env.WANDB_API_KEY,
+  baseURL: 'https://api.inference.wandb.ai/v1',
 });
 
 const MODELS_TO_TRY = [
-  'nvidia/llama-3.1-nemotron-70b-instruct',
-  'meta/llama-3.1-70b-instruct',
-  'meta/llama-3.1-8b-instruct',
-  'mistralai/mistral-7b-instruct-v0.3',
-  'meta/llama3-70b-instruct',
-  'meta/llama3-8b-instruct',
+  'OpenPipe/Qwen3-14B-Instruct',
+  'meta-llama/Llama-3.1-8B-Instruct',
+  'meta-llama/Llama-3.3-70B-Instruct',
+  'microsoft/Phi-4-mini-instruct',
 ];
 
 async function testModel(model) {
@@ -31,23 +29,9 @@ async function testModel(model) {
   }
 }
 
-async function testEmbedding(model) {
-  try {
-    const res = await client.embeddings.create({ model, input: 'test', encoding_format: 'float' });
-    console.log(`✅ Embedding ${model} → vector length ${res.data[0].embedding.length}`);
-    return true;
-  } catch (e) {
-    const msg = e?.error?.message || e?.message || String(e);
-    console.log(`❌ Embedding ${model} → ${msg.slice(0, 120)}`);
-    return false;
-  }
-}
-
-console.log('=== Testing Chat Models ===');
+console.log('=== Testing WandB Chat Models ===');
 for (const m of MODELS_TO_TRY) {
   await testModel(m);
 }
 
-console.log('\n=== Testing Embedding Model ===');
-await testEmbedding('nvidia/nv-embedqa-e5-v5');
-await testEmbedding('nvidia/nv-embed-v1');
+console.log('\n(WandB inference has no embedding endpoint — embeddings are handled locally via hash vectors)');

@@ -1,0 +1,59 @@
+_wandb:
+    value:
+        cli_version: 0.26.1
+        e:
+            paots13mlix75lux4f51dugogoqme75a:
+                codePath: eval\test_context_overflow.py
+                codePathLocal: eval\test_context_overflow.py
+                cpu_count: 8
+                cpu_count_logical: 16
+                cudaVersion: "12.5"
+                disk:
+                    /:
+                        total: "915495972864"
+                        used: "815956824064"
+                email: avvishnuram@gmail.com
+                executable: C:\Vishnu\Boston University\projects\hackathon\venv\Scripts\python.exe
+                gpu: NVIDIA GeForce RTX 3060 Laptop GPU
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Ampere
+                      cudaCores: 3840
+                      memoryTotal: "6442450944"
+                      name: NVIDIA GeForce RTX 3060 Laptop GPU
+                      uuid: GPU-72000743-1df3-76a0-4b4e-6627e0e5abc5
+                host: LAPTOP-IKSL6TII
+                memory:
+                    total: "14877257728"
+                os: Windows-10-10.0.26200-SP0
+                program: C:\Vishnu\Boston University\projects\hackathon\Hackathon-WnB\eval\test_context_overflow.py
+                python: CPython 3.9.13
+                root: C:\Vishnu\Boston University\projects\hackathon\Hackathon-WnB
+                startedAt: "2026-05-31T21:28:48.521284Z"
+                writerId: paots13mlix75lux4f51dugogoqme75a
+        m: []
+        python_version: 3.9.13
+        t:
+            "3":
+                - 2
+                - 13
+                - 16
+            "4": 3.9.13
+            "5": 0.26.1
+            "8":
+                - 3
+            "12": 0.26.1
+            "13": windows-amd64
+anchor_facts:
+    value:
+        codeword: AURORA-7734
+        lucky_number: "8291"
+        project: Project Nebula
+fill_rounds:
+    value: 7
+model:
+    value: OpenPipe/Qwen3-14B-Instruct
+server:
+    value: http://localhost:3000
+window_size:
+    value: 6

@@ -1,0 +1,48 @@
+{
+  "timestamp": "20260531_164857",
+  "fill_rounds": 8,
+  "baseline": {
+    "mode": "baseline",
+    "session_id": "baseline_b3388809",
+    "use_context_core": false,
+    "fill_rounds": 8,
+    "anchor_facts": {
+      "codeword": "AURORA-7734",
+      "project": "Project Nebula",
+      "lucky_number": "8291"
+    },
+    "answers": {
+      "codeword": "assistant:<think>\n\n</think>\n\nI don't have access to previous messages or any personal information about you, so I can't provide a secret codeword.",
+      "project": "I don't have access to information about your specific projects. Please provide more context or clarify your question.",
+      "lucky_number": "I don't have access to personal information about you, including your lucky number."
+    },
+    "scores": {
+      "codeword": false,
+      "project": false,
+      "lucky_number": false
+    },
+    "accuracy": 0.0
+  },
+  "contextcore": {
+    "mode": "contextcore",
+    "session_id": "contextcore_e357dd68",
+    "use_context_core": true,
+    "fill_rounds": 8,
+    "anchor_facts": {
+      "codeword": "AURORA-7734",
+      "project": "Project Nebula",
+      "lucky_number": "8291"
+    },
+    "answers": {
+      "codeword": "AURORA-7734",
+      "project": "Project Nebula",
+      "lucky_number": "8291"
+    },
+    "scores": {
+      "codeword": true,
+      "project": true,
+      "lucky_number": true
+    },
+    "accuracy": 1.0
+  }
+}

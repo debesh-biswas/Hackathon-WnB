@@ -1,21 +1,53 @@
 import { LocalIndex } from 'vectra';
-import OpenAI from 'openai';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-export function createStore() {
-  if (!process.env.NVIDIA_API_KEY) {
-    throw new Error('NVIDIA_API_KEY environment variable is not set. Get a free key at https://build.nvidia.com');
+// WandB inference has no embedding endpoint, so we use local feature-hashing:
+// each word/bigram is hashed into a 512-dim bucket vector weighted by TF.
+// Cosine similarity on these vectors correlates with keyword overlap, which is
+// sufficient for short factual queries in this demo.
+const EMBED_DIM = 512;
+
+const STOP_WORDS = new Set([
+  'i','me','my','we','our','you','your','he','his','she','her','it','its',
+  'they','their','what','which','who','this','that','these','those',
+  'am','is','are','was','were','be','been','being','have','has','had',
+  'do','does','did','will','would','could','should','may','might','shall',
+  'a','an','the','and','but','or','nor','for','so','yet',
+  'in','on','at','to','of','with','by','from','up','about','into','than',
+  'just','only','also','very','can','not','no','how',
+]);
+
+function djb2(str) {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash + str.charCodeAt(i)) & 0x7fffffff;
+  }
+  return hash;
+}
+
+function embedText(text) {
+  const vec = new Array(EMBED_DIM).fill(0);
+  const words = text.toLowerCase()
+    .replace(/[^\w\s]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 1 && !STOP_WORDS.has(w));
+
+  for (const w of words) {
+    vec[djb2(w) % EMBED_DIM] += 1;
+  }
+  for (let i = 0; i < words.length - 1; i++) {
+    vec[djb2(words[i] + '_' + words[i + 1]) % EMBED_DIM] += 0.5;
   }
 
-  const index = new LocalIndex(join(__dirname, '../../vector-store'));
+  const norm = Math.sqrt(vec.reduce((s, v) => s + v * v, 0));
+  return norm > 0 ? vec.map(v => v / norm) : vec;
+}
 
-  const client = new OpenAI({
-    apiKey: process.env.NVIDIA_API_KEY,
-    baseURL: 'https://integrate.api.nvidia.com/v1',
-  });
+export function createStore() {
+  const index = new LocalIndex(join(__dirname, '../../vector-store'));
 
   let indexReadyPromise = null;
   async function ensureIndex() {
@@ -29,21 +61,9 @@ export function createStore() {
     return indexReadyPromise;
   }
 
-  async function embedText(text) {
-    const res = await client.embeddings.create({
-      model: 'nvidia/nv-embed-v1',
-      input: text,
-      encoding_format: 'float',
-    });
-    if (!res.data || !res.data[0]) {
-      throw new Error(`Embedding API returned unexpected shape: ${JSON.stringify(res)}`);
-    }
-    return res.data[0].embedding;
-  }
-
   async function storeFact(fact, metadata = {}) {
     await ensureIndex();
-    const vector = await embedText(fact);
+    const vector = embedText(fact);
     await index.insertItem({
       vector,
       metadata: { text: fact, ts: Date.now(), ...metadata },
@@ -52,7 +72,7 @@ export function createStore() {
 
   async function retrieveFacts(query, topK = 5) {
     await ensureIndex();
-    const vector = await embedText(query);
+    const vector = embedText(query);
     const results = await index.queryItems(vector, topK);
     return results.map(({ item, score }) => {
       const { text, ts, ...rest } = item.metadata;

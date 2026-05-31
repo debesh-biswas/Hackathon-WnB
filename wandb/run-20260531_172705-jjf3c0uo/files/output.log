@@ -1,0 +1,59 @@
+
+ContextCore context overflow test  |  W&B run: overflow-test-20260531-172705
+Fill rounds : 7
+Window size : 6 turns for BOTH modes — only difference is vector store retrieval
+Anchor scrolls out of the shared window after turn 4.
+
+  [memories cleared]
+
+==============================================================
+  MODE: BASELINE  |  session: baseline_cdc2dbe4
+==============================================================
+
+Turn 1 — planting anchor facts...
+  Response  : 1. Your secret codeword is AURORA-7734.
+2. You are working on a project called Project Nebula.
+3. Your lucky number ...
+  Tokens    : 127  |  latency: — ms
+
+Fill rounds (7) — pushing anchor out of the 6-turn window...
+
+Turn 2 — How does TCP/IP congestion control work? Explain slow start and C...
+  Turn  2 | tokens: 177 | latency: — ms
+Turn 3 — What are the main differences between REST and GraphQL APIs?...
+  Turn  3 | tokens: 483 | latency: — ms
+Turn 4 — Explain how Docker containers differ from virtual machines....
+  Turn  4 | tokens: 866 | latency: — ms
+Turn 5 — How does a B-tree index improve database query performance?...
+  Turn  5 | tokens: 1259 | latency: — ms
+Turn 6 — What is the CAP theorem and how do distributed databases navigate...
+  Turn  6 | tokens: 1295 | latency: — ms
+Turn 7 — How does the transformer attention mechanism work at a high level...
+  Turn  7 | tokens: 1236 | latency: — ms
+Turn 8 — What is the difference between optimistic and pessimistic locking...
+  Turn  8 | tokens: 1070 | latency: — ms
+
+Recall probes — anchor planted 7 turns ago...
+
+  Q: What was my secret codeword? Reply with just the codeword itself.
+  A: 'sunshine'
+Traceback (most recent call last):
+  File "C:\Vishnu\Boston University\projects\hackathon\Hackathon-WnB\eval\test_context_overflow.py", line 338, in <module>
+    main()
+  File "C:\Vishnu\Boston University\projects\hackathon\Hackathon-WnB\eval\test_context_overflow.py", line 313, in main
+    baseline = run_test("baseline", use_context_core=False)
+  File "C:\Vishnu\Boston University\projects\hackathon\Hackathon-WnB\eval\test_context_overflow.py", line 191, in run_test
+    scores_so_far = score_recall(answers)
+  File "C:\Vishnu\Boston University\projects\hackathon\Hackathon-WnB\eval\test_context_overflow.py", line 99, in score_recall
+    "project":      ANCHOR_FACTS["project"].lower() in answers["project"].lower(),
+KeyError: 'project'
+Traceback (most recent call last):
+  File "C:\Vishnu\Boston University\projects\hackathon\Hackathon-WnB\eval\test_context_overflow.py", line 338, in <module>
+    main()
+  File "C:\Vishnu\Boston University\projects\hackathon\Hackathon-WnB\eval\test_context_overflow.py", line 313, in main
+    baseline = run_test("baseline", use_context_core=False)
+  File "C:\Vishnu\Boston University\projects\hackathon\Hackathon-WnB\eval\test_context_overflow.py", line 191, in run_test
+    scores_so_far = score_recall(answers)
+  File "C:\Vishnu\Boston University\projects\hackathon\Hackathon-WnB\eval\test_context_overflow.py", line 99, in score_recall
+    "project":      ANCHOR_FACTS["project"].lower() in answers["project"].lower(),
+KeyError: 'project'

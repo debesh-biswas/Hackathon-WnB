@@ -20,7 +20,7 @@ export async function runUnderstanding(message, recentTurns, client) {
     : message;
   try {
     const res = await client.chat.completions.create({
-      model: 'google/gemma-3n-e4b-it',
+      model: 'OpenPipe/Qwen3-14B-Instruct',
       max_tokens: 200,
       messages: [{ role: 'system', content: SYSTEM }, { role: 'user', content: userContent }],
     });

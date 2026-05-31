@@ -7,11 +7,10 @@ import { runMemoryWrite } from './agents/memoryWrite.js';
 
 export async function runPipeline(userMessage, sessionHistory, store, client) {
   const startTime = Date.now();
-  const recentTurns = sessionHistory.slice(-6);
 
   // Step 1: Understanding — reformulate query, decide if retrieval is needed
   const understandStart = Date.now();
-  const understanding = await runUnderstanding(userMessage, recentTurns, client);
+  const understanding = await runUnderstanding(userMessage, sessionHistory, client);
   const understand_ms = Date.now() - understandStart;
 
   // Step 2: Memory Read — skip entirely if needsContext=false
@@ -31,13 +30,13 @@ export async function runPipeline(userMessage, sessionHistory, store, client) {
   }
   const relevance_ms = Date.now() - relevanceStart;
 
-  // Step 4: Pack context
-  const packed = packContext(memories, recentTurns, userMessage);
+  // Step 4: Pack context — retrieved memories only, no raw history
+  const packed = packContext(memories, [], userMessage);
 
   // Step 5: Main LLM call
   const llmStart = Date.now();
   const llmRes = await client.chat.completions.create({
-    model: 'google/gemma-3n-e4b-it',
+    model: 'OpenPipe/Qwen3-14B-Instruct',
     max_tokens: 1000,
     messages: [
       { role: 'system', content: packed.system },

@@ -40,7 +40,7 @@ export async function runIntake(message, client) {
 
   try {
     const res = await client.chat.completions.create({
-      model: 'google/gemma-3n-e4b-it',
+      model: 'OpenPipe/Qwen3-14B-Instruct',
       max_tokens: 200,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },

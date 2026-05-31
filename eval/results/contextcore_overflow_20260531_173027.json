@@ -1,0 +1,60 @@
+{
+  "timestamp": "20260531_173027",
+  "wandb_run": "overflow-test-20260531-172846",
+  "fill_rounds": 7,
+  "anchor_facts": {
+    "codeword": "AURORA-7734",
+    "project": "Project Nebula",
+    "lucky_number": "8291"
+  },
+  "baseline": {
+    "mode": "baseline",
+    "session_id": "baseline_f4cbdbfe",
+    "use_context_core": false,
+    "anchor_in_store": null,
+    "fill_rounds": 7,
+    "anchor_facts": {
+      "codeword": "AURORA-7734",
+      "project": "Project Nebula",
+      "lucky_number": "8291"
+    },
+    "answers": {
+      "codeword": "sunflower",
+      "project": "Project Horizon",
+      "lucky_number": "7"
+    },
+    "scores": {
+      "codeword": false,
+      "project": false,
+      "lucky_number": false
+    },
+    "accuracy": 0.0,
+    "total_turns": 11,
+    "total_tokens": 7444
+  },
+  "contextcore": {
+    "mode": "contextcore",
+    "session_id": "contextcore_c1e5e924",
+    "use_context_core": true,
+    "anchor_in_store": true,
+    "fill_rounds": 7,
+    "anchor_facts": {
+      "codeword": "AURORA-7734",
+      "project": "Project Nebula",
+      "lucky_number": "8291"
+    },
+    "answers": {
+      "codeword": "AURORA-7734",
+      "project": "Project Nebula",
+      "lucky_number": "8291"
+    },
+    "scores": {
+      "codeword": true,
+      "project": true,
+      "lucky_number": true
+    },
+    "accuracy": 1.0,
+    "total_turns": 11,
+    "total_tokens": 7245
+  }
+}

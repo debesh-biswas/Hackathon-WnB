@@ -1,18 +1,17 @@
 import 'dotenv/config';
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 import https from 'https';
 
-const KEY = process.env.NVIDIA_API_KEY;
+const KEY = process.env.WANDB_API_KEY;
 console.log('API Key loaded:', KEY ? `${KEY.slice(0, 10)}...` : 'MISSING');
 
 const body = JSON.stringify({
-  model: 'google/gemma-3n-e4b-it',
+  model: 'OpenPipe/Qwen3-14B-Instruct',
   max_tokens: 10,
   messages: [{ role: 'user', content: 'Say ok' }],
 });
 
 const options = {
-  hostname: 'integrate.api.nvidia.com',
+  hostname: 'api.inference.wandb.ai',
   path: '/v1/chat/completions',
   method: 'POST',
   headers: {
@@ -22,7 +21,7 @@ const options = {
   },
 };
 
-console.log('Connecting to integrate.api.nvidia.com...');
+console.log('Connecting to api.inference.wandb.ai...');
 
 const req = https.request(options, (res) => {
   let data = '';
