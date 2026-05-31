@@ -39,9 +39,9 @@ app.post('/chat', async (req, res) => {
     if (useContextCore === true) {
       result = await runPipeline(message, sessions[sessionId], store, client);
     } else {
-      // Baseline: sliding window — last 10 messages (5 exchanges)
+      // Baseline: sliding window — last 5 messages (~2 exchanges)
       const baselineMessages = [
-        ...sessions[sessionId].slice(-10),
+        ...sessions[sessionId].slice(-5),
         { role: 'user', content: message },
       ];
       const BASELINE_SYSTEM = 'You are a helpful assistant. Answer only what the user asked — nothing more, nothing less. Match your response length to the question: technical questions deserve thorough answers, simple ones get short ones. Never append unsolicited context, follow-up notes, or information about previous topics.';

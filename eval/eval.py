@@ -26,22 +26,6 @@ FILLER_MESSAGES = [
     "How does async/await work under the hood in JavaScript? Walk me through the event loop.",
     "What are the main differences between REST and GraphQL, and when should I use each?",
     "Explain microservices architecture — benefits, drawbacks, and when it makes sense.",
-    "What are the most common security vulnerabilities in web apps and how do I prevent them?",
-    "How does database indexing work, and what are the different types of indexes?",
-    "Explain the CAP theorem and how it applies to distributed systems design.",
-    "What's the difference between authentication and authorisation, and how should I implement both?",
-    "How does garbage collection work in modern runtimes like V8?",
-    "What are the pros and cons of TypeScript versus plain JavaScript for a growing codebase?",
-    "How do I implement rate limiting in a REST API effectively?",
-    "Explain the difference between horizontal and vertical scaling with examples.",
-    "What is eventual consistency and when is it acceptable in production systems?",
-    "How does a content delivery network work and when should I use one?",
-    "What are the trade-offs of using an ORM versus writing raw SQL?",
-    "Explain how JWT tokens work and what their security implications are.",
-    "What is the difference between a message queue and a pub/sub system?",
-    "How do I design an API for pagination efficiently at scale?",
-    "What are the SOLID principles and why do they matter in practice?",
-    "Explain the difference between concurrency and parallelism with real examples.",
 ]
 
 EVAL_QUESTIONS = [

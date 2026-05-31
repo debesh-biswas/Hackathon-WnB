@@ -514,7 +514,7 @@
   <header>
     <h1>ContextCore</h1>
 
-    <button id="btn-demo" title="Run 25-turn demo">&#9654; Run Demo</button>
+    <button id="btn-demo" title="Run 12-turn demo">&#9654; Run Demo</button>
     <button id="btn-reset" title="Reset memory and clear chat">Reset Memory</button>
   </header>
 
@@ -989,25 +989,9 @@
       "How does async/await work under the hood in JavaScript? Walk me through the event loop.",
       "What are the main differences between REST and GraphQL, and when should I use each?",
       "Explain microservices architecture — benefits, drawbacks, and when it makes sense.",
-      "What are the most common security vulnerabilities in web apps and how do I prevent them?",
-      "How does database indexing work, and what are the different types of indexes?",
-      "Explain the CAP theorem and how it applies to distributed systems design.",
-      "What's the difference between authentication and authorisation, and how should I implement both?",
-      "How does garbage collection work in modern runtimes like V8?",
-      "What are the pros and cons of TypeScript versus plain JavaScript for a growing codebase?",
-      "How do I implement rate limiting in a REST API effectively?",
-      "Explain the difference between horizontal and vertical scaling with examples.",
-      "What is eventual consistency and when is it acceptable in production systems?",
-      "How does a content delivery network work and when should I use one?",
-      "What are the trade-offs of using an ORM versus writing raw SQL?",
-      "Explain how JWT tokens work and what their security implications are.",
-      "What is the difference between a message queue and a pub/sub system?",
-      "How do I design an API for pagination efficiently at scale?",
-      "What are the SOLID principles and why do they matter in practice?",
-      "Explain the difference between concurrency and parallelism with real examples.",
     ];
 
-    // 5 setup → 20 filler → 3 recall at the end (no recall mid-demo)
+    // 5 setup → 4 filler (9 total) → 3 recall
     function buildDemoPlan() {
       const plan = [];
 
@@ -1016,28 +1000,28 @@
         plan.push({ text: SETUP_MESSAGES[i] });
       }
 
-      // Turns 6-25: filler (all 20, no recall in between)
-      for (let i = 0; i < 20; i++) {
+      // Turns 6-9: filler (all setup exits baseline window of 5 msgs by turn 9)
+      for (let i = 0; i < 4; i++) {
         plan.push({ text: FILLER_MESSAGES[i] });
       }
 
-      // Turn 26: recall — database
+      // Turn 10: recall — database
       plan.push({ text: "By the way, what database are we using in our stack?" });
 
-      // Turn 27: recall — language
-      plan.push({ text: "And what programming language does my team work in?" });
+      // Turn 11: recall — language
+      plan.push({ text: "And what language does my team write in?" });
 
-      // Turn 28: grounding — contradiction
+      // Turn 12: grounding — contradiction
       plan.push({ text: "Actually we switched to MongoDB last month." });
 
-      return plan; // 28 turns
+      return plan; // 12 turns
     }
 
     // ── Run Demo ──────────────────────────────────────────
     btnDemo.addEventListener('click', async () => {
       if (demoRunning) return;
 
-      const ok = confirm('This will reset memories and run the 28-turn demo. Continue?');
+      const ok = confirm('This will reset memories and run the 12-turn demo. Continue?');
       if (!ok) return;
 
       // Reset first
