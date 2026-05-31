@@ -1,6 +1,6 @@
 # ContextCore
 
-> **"I Built an AI That Never Forgets (vs One That Does)"**
+> **"We Built an AI That Never Forgets (vs One That Does)"**
 
 ContextCore is a multi-agent middleware layer that gives LLMs persistent, long-term memory — without relying on conversation history. Every fact a user shares is extracted, embedded, and stored in a vector database. On the next question, only the relevant facts are retrieved and injected into the prompt.
 
