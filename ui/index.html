@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ContextCore</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --bg-tertiary: #0f3460;
+      --accent: #e94560;
+      --accent-dim: #c73652;
+      --text-primary: #eaeaea;
+      --text-muted: #8892a4;
+      --user-bubble: #e94560;
+      --assistant-bubble: #1e2a45;
+      --border: #2a3550;
+      --warning: #f5a623;
+      --success: #4caf50;
+      --memory-highlight: #2a4a2e;
+      --memory-highlight-border: #4caf50;
+    }
+
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 20px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: var(--accent);
+      margin-right: auto;
+    }
+
+    /* Toggle */
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .toggle-label { font-weight: 600; color: var(--text-primary); }
+
+    .toggle {
+      position: relative;
+      width: 48px;
+      height: 24px;
+    }
+
+    .toggle input { opacity: 0; width: 0; height: 0; }
+
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: #374151;
+      border-radius: 24px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #6b7280;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .toggle input:checked + .toggle-slider { background: #1d4ed8; }
+    .toggle input:checked + .toggle-slider::before {
+      transform: translateX(24px);
+      background: var(--accent);
+    }
+
+    #toggle-state {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+      background: var(--accent);
+      color: white;
+    }
+
+    #toggle-state.off {
+      background: #374151;
+      color: var(--text-muted);
+    }
+
+    /* Reset button */
+    #btn-reset {
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    #btn-reset:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Error banner ── */
+    #error-banner {
+      display: none;
+      background: #7f1d1d;
+      color: #fca5a5;
+      padding: 10px 20px;
+      font-size: 0.85rem;
+      border-bottom: 1px solid #991b1b;
+      flex-shrink: 0;
+    }
+    #error-banner.visible { display: flex; align-items: center; gap: 8px; }
+    #error-banner button {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: #fca5a5;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    /* ── Main layout ── */
+    main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Chat panel ── */
+    .chat-panel {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+      border-right: 1px solid var(--border);
+    }
+
+    #chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      scroll-behavior: smooth;
+    }
+
+    #chat-messages::-webkit-scrollbar { width: 6px; }
+    #chat-messages::-webkit-scrollbar-track { background: transparent; }
+    #chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* Message bubbles */
+    .msg-row {
+      display: flex;
+      flex-direction: column;
+      max-width: 72%;
+    }
+
+    .msg-row.user { align-self: flex-end; align-items: flex-end; }
+    .msg-row.assistant { align-self: flex-start; align-items: flex-start; }
+
+    .bubble {
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .msg-row.user .bubble {
+      background: var(--user-bubble);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .msg-row.assistant .bubble {
+      background: var(--assistant-bubble);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+
+    .msg-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-bottom: 3px;
+      padding: 0 4px;
+    }
+
+    /* Contradiction warning */
+    .contradiction-banner {
+      background: #451a03;
+      border: 1px solid var(--warning);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      color: var(--warning);
+      margin-bottom: 4px;
+      max-width: 100%;
+    }
+    .contradiction-banner strong { display: block; margin-bottom: 4px; }
+    .contradiction-banner ul { padding-left: 16px; }
+
+    /* Chat input area */
+    .chat-input-area {
+      padding: 14px 16px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+
+    #msg-input {
+      flex: 1;
+      padding: 10px 14px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      resize: none;
+      outline: none;
+      min-height: 42px;
+      max-height: 120px;
+      line-height: 1.4;
+      font-family: inherit;
+      transition: border-color 0.15s;
+    }
+    #msg-input:focus { border-color: var(--accent); }
+    #msg-input::placeholder { color: var(--text-muted); }
+    #msg-input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    #btn-send {
+      padding: 10px 20px;
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      white-space: nowrap;
+      height: 42px;
+    }
+    #btn-send:hover:not(:disabled) { background: var(--accent-dim); }
+    #btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Thinking indicator */
+    .thinking-msg {
+      display: none;
+      align-self: flex-start;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-style: italic;
+      padding: 6px 14px;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+    /* ── Memory Inspector ── */
+    .memory-panel {
+      width: 320px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-secondary);
+      overflow: hidden;
+    }
+
+    .memory-panel h2 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    #memory-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #memory-list::-webkit-scrollbar { width: 4px; }
+    #memory-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .memory-item {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-primary);
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: var(--text-primary);
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .memory-item.used {
+      background: var(--memory-highlight);
+      border-color: var(--memory-highlight-border);
+    }
+
+    .memory-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .memory-star {
+      color: #fbbf24;
+      font-size: 0.9rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .memory-item.used .memory-star { opacity: 1; }
+
+    .memory-ts {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+
+    .memory-empty {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      text-align: center;
+      padding: 24px 0;
+      font-style: italic;
+    }
+
+    /* ── Footer ── */
+    footer {
+      display: flex;
+      gap: 0;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .stat {
+      padding: 8px 18px;
+      border-right: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .stat:last-child { border-right: none; }
+
+    .stat-label { font-weight: 600; color: var(--text-muted); }
+    .stat-value { color: var(--text-primary); }
+    #grounding-value.passed { color: var(--success); }
+    #grounding-value.contradiction { color: var(--warning); }
+
+    /* ── A/B Mode toggle ── */
+    .toggle input:checked + .toggle-slider.ab-slider { background: #7c3aed; }
+    .toggle input:checked + .toggle-slider.ab-slider::before {
+      transform: translateX(24px);
+      background: #a78bfa;
+    }
+
+    #ab-state {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+      background: #374151;
+      color: var(--text-muted);
+    }
+    #ab-state.on {
+      background: #7c3aed;
+      color: white;
+    }
+
+    /* ── Run Demo button ── */
+    #btn-demo {
+      padding: 6px 14px;
+      border: 1px solid #7c3aed;
+      border-radius: 6px;
+      background: transparent;
+      color: #a78bfa;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    #btn-demo:hover:not(:disabled) { background: #7c3aed; color: white; }
+    #btn-demo:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Demo status bar ── */
+    #demo-status {
+      display: none;
+      background: #1e1433;
+      color: #a78bfa;
+      padding: 8px 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-bottom: 1px solid #7c3aed;
+      flex-shrink: 0;
+      align-items: center;
+      gap: 8px;
+    }
+    #demo-status.visible { display: flex; }
+    #demo-status-text { flex: 1; }
+
+    /* ── A/B side-by-side layout ── */
+    .ab-row {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .ab-side {
+      flex: 1;
+      min-width: 0;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: var(--assistant-bubble);
+      border: 1px solid var(--border);
+    }
+
+    .ab-side.cc-side {
+      border-left: 3px solid var(--success);
+    }
+
+    .ab-side.baseline-side {
+      border-left: 3px solid #6b7280;
+    }
+
+    .ab-side-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .cc-side .ab-side-label { color: var(--success); }
+    .baseline-side .ab-side-label { color: #9ca3af; }
+
+    .ab-side-text { color: var(--text-primary); }
+
+    /* ── Thinking pair ── */
+    .ab-thinking {
+      display: none;
+      gap: 10px;
+      width: 100%;
+    }
+    .ab-thinking.visible { display: flex; }
+    .ab-thinking-side {
+      flex: 1;
+      font-size: 0.8rem;
+      font-style: italic;
+      color: var(--text-muted);
+      padding: 4px 8px;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    .ab-side-tokens {
+      font-size: 0.7rem;
+      color: #9ca3af;
+      margin-top: 6px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <h1>ContextCore</h1>
+
+    <button id="btn-demo" title="Run 25-turn demo">&#9654; Run Demo</button>
+    <button id="btn-reset" title="Reset memory and clear chat">Reset Memory</button>
+  </header>
+
+  <!-- Demo status bar -->
+  <div id="demo-status">
+    <span>&#9654;</span>
+    <span id="demo-status-text">Demo running…</span>
+  </div>
+
+  <!-- Error banner -->
+  <div id="error-banner">
+    <span id="error-text"></span>
+    <button onclick="hideError()">✕</button>
+  </div>
+
+  <!-- Main -->
+  <main>
+    <!-- Chat panel -->
+    <div class="chat-panel">
+      <div id="chat-messages">
+        <div class="thinking-msg" id="thinking">Thinking…</div>
+        <div class="ab-thinking" id="ab-thinking">
+          <div class="ab-thinking-side">ContextCore thinking…</div>
+          <div class="ab-thinking-side">Baseline thinking…</div>
+        </div>
+      </div>
+
+      <div class="chat-input-area">
+        <textarea
+          id="msg-input"
+          placeholder="Type a message… (Enter to send, Shift+Enter for new line)"
+          rows="1"
+        ></textarea>
+        <button id="btn-send">Send</button>
+      </div>
+    </div>
+
+    <!-- Memory Inspector -->
+    <div class="memory-panel">
+      <h2>Memory Inspector</h2>
+      <div id="memory-list">
+        <div class="memory-empty">No memories yet.</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="stat">
+      <span class="stat-label">Turn:</span>
+      <span class="stat-value" id="turn-value">0</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Memories:</span>
+      <span class="stat-value" id="memories-value">0</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Grounding:</span>
+      <span class="stat-value" id="grounding-value">–</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Baseline tokens:</span>
+      <span class="stat-value" id="baseline-token-value">0</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Baseline ctx:</span>
+      <span class="stat-value" id="baseline-ctx-value">0%</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">CC tokens:</span>
+      <span class="stat-value" id="cc-token-value">0</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">CC ctx:</span>
+      <span class="stat-value" id="cc-ctx-value">0%</span>
+    </div>
+  </footer>
+
+  <script>
+    // ── State ──────────────────────────────────────────────
+    const CONTEXT_WINDOW = 33000; // gemma-3n-e4b-it token limit
+    const abSessionCC       = crypto.randomUUID();
+    const abSessionBaseline = crypto.randomUUID();
+    let turnCount    = 0;
+    let memoriesUsed = [];
+    let demoRunning  = false;
+    let cumulativeCCTokens       = 0;
+    let cumulativeBaselineTokens = 0;
+    let lastCCTokens       = 0; // this turn's request size (for ctx%)
+    let lastBaselineTokens = 0;
+
+    // ── DOM refs ───────────────────────────────────────────
+    const msgInput       = document.getElementById('msg-input');
+    const btnSend        = document.getElementById('btn-send');
+    const chatMessages   = document.getElementById('chat-messages');
+    const thinkingEl     = document.getElementById('thinking');
+    const abThinkingEl   = document.getElementById('ab-thinking');
+    const btnReset       = document.getElementById('btn-reset');
+    const btnDemo        = document.getElementById('btn-demo');
+    const demoStatus     = document.getElementById('demo-status');
+    const demoStatusText = document.getElementById('demo-status-text');
+    const errorBanner    = document.getElementById('error-banner');
+    const errorText      = document.getElementById('error-text');
+    const memoryList     = document.getElementById('memory-list');
+    const turnValue          = document.getElementById('turn-value');
+    const memoriesValue      = document.getElementById('memories-value');
+    const groundingValue     = document.getElementById('grounding-value');
+    const baselineTokenValue = document.getElementById('baseline-token-value');
+    const baselineCtxValue   = document.getElementById('baseline-ctx-value');
+    const ccTokenValue       = document.getElementById('cc-token-value');
+    const ccCtxValue         = document.getElementById('cc-ctx-value');
+
+    // ── Error helpers ──────────────────────────────────────
+    function showError(msg) {
+      errorText.textContent = msg;
+      errorBanner.classList.add('visible');
+    }
+    function hideError() {
+      errorBanner.classList.remove('visible');
+    }
+
+    // ── Auto-resize textarea ───────────────────────────────
+    msgInput.addEventListener('input', () => {
+      msgInput.style.height = 'auto';
+      msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + 'px';
+    });
+
+    // ── Send on Enter (Shift+Enter = newline) ──────────────
+    msgInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    btnSend.addEventListener('click', sendMessage);
+
+    // ── Scroll chat to bottom ──────────────────────────────
+    function scrollToBottom() {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // ── Append a standard chat bubble ─────────────────────
+    function appendBubble(role, text, contradictions, groundingPassed) {
+      const row = document.createElement('div');
+      row.className = `msg-row ${role}`;
+
+      const label = document.createElement('div');
+      label.className = 'msg-label';
+      label.textContent = role === 'user' ? 'You' : 'ContextCore';
+
+      // Contradiction warning (assistant only)
+      if (role === 'assistant' && groundingPassed === false && contradictions && contradictions.length > 0) {
+        const warn = document.createElement('div');
+        warn.className = 'contradiction-banner';
+        const items = contradictions.map(c => `<li>${escapeHtml(c)}</li>`).join('');
+        warn.innerHTML = `<strong>⚠️ Contradiction detected</strong><ul>${items}</ul>`;
+        row.appendChild(warn);
+      }
+
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = text;
+
+      row.appendChild(label);
+      row.appendChild(bubble);
+
+      // Insert BEFORE the thinking indicator
+      chatMessages.insertBefore(row, thinkingEl);
+      scrollToBottom();
+    }
+
+    // ── Append A/B side-by-side bubble ────────────────────
+    function appendABBubble(ccText, baselineText, ccTokens, baselineTokens) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'ab-row';
+
+      // Baseline side (LEFT)
+      const baseSide = document.createElement('div');
+      baseSide.className = 'ab-side baseline-side';
+      const baseLabel = document.createElement('div');
+      baseLabel.className = 'ab-side-label';
+      baseLabel.textContent = 'Baseline (Full History)';
+      const baseContent = document.createElement('div');
+      baseContent.className = 'ab-side-text';
+      baseContent.textContent = baselineText;
+      const baseTokenEl = document.createElement('div');
+      baseTokenEl.className = 'ab-side-tokens';
+      baseTokenEl.textContent = baselineTokens ? `~${baselineTokens.toLocaleString()} tokens` : '';
+      baseSide.appendChild(baseLabel);
+      baseSide.appendChild(baseContent);
+      baseSide.appendChild(baseTokenEl);
+
+      // ContextCore side (RIGHT)
+      const ccSide = document.createElement('div');
+      ccSide.className = 'ab-side cc-side';
+      const ccLabel = document.createElement('div');
+      ccLabel.className = 'ab-side-label';
+      ccLabel.textContent = 'ContextCore ✅';
+      const ccContent = document.createElement('div');
+      ccContent.className = 'ab-side-text';
+      ccContent.textContent = ccText;
+      const ccTokenEl = document.createElement('div');
+      ccTokenEl.className = 'ab-side-tokens';
+      ccTokenEl.textContent = ccTokens ? `~${ccTokens.toLocaleString()} tokens` : '';
+      ccSide.appendChild(ccLabel);
+      ccSide.appendChild(ccContent);
+      ccSide.appendChild(ccTokenEl);
+
+      wrapper.appendChild(baseSide);   // baseline = left
+      wrapper.appendChild(ccSide);     // ContextCore = right
+
+      // Insert before the ab-thinking indicator
+      chatMessages.insertBefore(wrapper, abThinkingEl);
+      scrollToBottom();
+    }
+
+    // ── HTML escape ────────────────────────────────────────
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    // ── Pipeline status cycling ────────────────────────────
+    const PIPELINE_STEPS = [
+      'Analyzing your message...',
+      'Retrieving memories...',
+      'Generating response...',
+      'Checking for contradictions...',
+    ];
+    let pipelineInterval = null;
+    let pipelineStepIndex = 0;
+
+    function startPipelineCycling() {
+      pipelineStepIndex = 0;
+      thinkingEl.textContent = PIPELINE_STEPS[0];
+      pipelineInterval = setInterval(() => {
+        pipelineStepIndex = (pipelineStepIndex + 1) % PIPELINE_STEPS.length;
+        thinkingEl.textContent = PIPELINE_STEPS[pipelineStepIndex];
+      }, 800);
+    }
+
+    function stopPipelineCycling() {
+      if (pipelineInterval !== null) {
+        clearInterval(pipelineInterval);
+        pipelineInterval = null;
+      }
+      thinkingEl.textContent = 'Thinking…';
+    }
+
+    // ── Set loading state ──────────────────────────────────
+    function setLoading(loading) {
+      msgInput.disabled = loading || demoRunning;
+      btnSend.disabled  = loading || demoRunning;
+      thinkingEl.style.display = 'none';
+      abThinkingEl.classList.toggle('visible', loading);
+      if (!loading) stopPipelineCycling();
+      if (loading) scrollToBottom();
+    }
+
+    // ── Fetch and render memories ──────────────────────────
+    async function refreshMemories(usedTexts = []) {
+      try {
+        const res = await fetch('/memories');
+        const all = await res.json();
+
+        if (!Array.isArray(all) || all.length === 0) {
+          memoryList.innerHTML = '<div class="memory-empty">No memories yet.</div>';
+          memoriesValue.textContent = '0';
+          return;
+        }
+
+        // Sort reverse-chronological
+        const sorted = [...all].sort((a, b) => (b.ts || 0) - (a.ts || 0));
+        memoriesValue.textContent = sorted.length;
+
+        const usedSet = new Set(usedTexts.map(t => (typeof t === 'string' ? t : t.text)));
+
+        memoryList.innerHTML = '';
+        sorted.forEach(fact => {
+          const text = fact.text || JSON.stringify(fact);
+          const isUsed = usedSet.has(text);
+
+          const item = document.createElement('div');
+          item.className = 'memory-item' + (isUsed ? ' used' : '');
+
+          const meta = document.createElement('div');
+          meta.className = 'memory-meta';
+
+          const star = document.createElement('span');
+          star.className = 'memory-star';
+          star.textContent = '★';
+
+          const ts = document.createElement('span');
+          ts.className = 'memory-ts';
+          ts.textContent = fact.ts ? new Date(fact.ts).toLocaleTimeString() : '';
+
+          meta.appendChild(star);
+          meta.appendChild(ts);
+
+          const textEl = document.createElement('div');
+          textEl.textContent = text;
+
+          item.appendChild(meta);
+          item.appendChild(textEl);
+          memoryList.appendChild(item);
+        });
+      } catch (err) {
+        console.error('Failed to fetch memories:', err);
+      }
+    }
+
+    // ── Update footer ──────────────────────────────────────
+    function updateFooter(tc, gp) {
+      turnValue.textContent = tc;
+      groundingValue.className = '';
+      if (gp === null || gp === undefined) {
+        groundingValue.textContent = '–';
+      } else if (gp === true) {
+        groundingValue.textContent = '✅ passed';
+        groundingValue.className = 'passed';
+      } else {
+        groundingValue.textContent = '⚠️ contradiction';
+        groundingValue.className = 'contradiction';
+      }
+      // ctx% = this turn's request size / context window (shows how full the window is NOW)
+      // tokens = cumulative across all turns (shows total cost)
+      const basePct = Math.min(100, (lastBaselineTokens / CONTEXT_WINDOW * 100)).toFixed(1);
+      const ccPct   = Math.min(100, (lastCCTokens       / CONTEXT_WINDOW * 100)).toFixed(1);
+      baselineTokenValue.textContent = cumulativeBaselineTokens.toLocaleString();
+      baselineCtxValue.textContent   = `${basePct}%`;
+      ccTokenValue.textContent       = cumulativeCCTokens.toLocaleString();
+      ccCtxValue.textContent         = `${ccPct}%`;
+    }
+
+    // ── Rate-limit error helper ────────────────────────────
+    function isRateLimitError(status, message) {
+      if (status === 429) return true;
+      if (typeof message === 'string') {
+        const lower = message.toLowerCase();
+        if (lower.includes('rate_limit') || lower.includes('ratelimiterror')) return true;
+      }
+      return false;
+    }
+
+    function friendlyError(status, rawMessage) {
+      if (isRateLimitError(status, rawMessage)) {
+        return 'Rate limit reached. Please wait a moment and try again.';
+      }
+      return rawMessage || `Server error ${status}`;
+    }
+
+    // ── Single chat request ────────────────────────────────
+    async function chatRequest(message, sid, useCC) {
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, sessionId: sid, useContextCore: useCC }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const raw = data.error || `Server error ${res.status}`;
+        throw new Error(friendlyError(res.status, raw));
+      }
+      return data;
+    }
+
+    // ── Send in A/B Mode ───────────────────────────────────
+    async function sendMessageAB(text) {
+      // Insert user bubble anchored to abThinkingEl so it interleaves with AB rows
+      const userRow = document.createElement('div');
+      userRow.className = 'msg-row user';
+      const userLabel = document.createElement('div');
+      userLabel.className = 'msg-label';
+      userLabel.textContent = 'You';
+      const userBubble = document.createElement('div');
+      userBubble.className = 'bubble';
+      userBubble.textContent = text;
+      userRow.appendChild(userLabel);
+      userRow.appendChild(userBubble);
+      chatMessages.insertBefore(userRow, abThinkingEl);
+      scrollToBottom();
+
+      setLoading(true);
+      try {
+        const [ccData, baseData] = await Promise.all([
+          chatRequest(text, abSessionCC, true),
+          chatRequest(text, abSessionBaseline, false),
+        ]);
+
+        memoriesUsed = ccData.memoriesUsed || [];
+        turnCount = ccData.turnCount || turnCount;
+
+        lastCCTokens       = ccData.tokenEstimate   || 0;
+        lastBaselineTokens = baseData.tokenEstimate || 0;
+        cumulativeCCTokens       += lastCCTokens;
+        cumulativeBaselineTokens += lastBaselineTokens;
+
+        appendABBubble(ccData.response, baseData.response, ccData.tokenEstimate, baseData.tokenEstimate);
+        updateFooter(turnCount, ccData.groundingPassed);
+        await refreshMemories(memoriesUsed);
+      } catch (err) {
+        showError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // ── Send message ───────────────────────────────────────
+    async function sendMessage(overrideText = null) {
+      const text = overrideText !== null ? overrideText : msgInput.value.trim();
+      if (!text) return;
+      hideError();
+      if (overrideText === null) {
+        msgInput.value = '';
+        msgInput.style.height = 'auto';
+      }
+      await sendMessageAB(text);
+      if (!demoRunning) msgInput.focus();
+    }
+
+    // ── Reset memory ───────────────────────────────────────
+    btnReset.addEventListener('click', async () => {
+      if (!confirm('Reset all memories and clear this chat session? This cannot be undone.')) return;
+      await doReset();
+    });
+
+    async function doReset() {
+      try {
+        hideError();
+        const res = await fetch('/memories', { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Reset failed');
+
+        // Clear chat messages (keep the thinking + ab-thinking indicators)
+        const rows = chatMessages.querySelectorAll('.msg-row, .contradiction-banner, .ab-row');
+        rows.forEach(el => el.remove());
+
+        // Reset state
+        turnCount = 0;
+        memoriesUsed = [];
+        cumulativeCCTokens = 0;
+        cumulativeBaselineTokens = 0;
+        lastCCTokens = 0;
+        lastBaselineTokens = 0;
+        updateFooter(0, null);
+
+        await refreshMemories([]);
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+
+    // ── Delay helper ──────────────────────────────────────
+    function delay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // ── Demo sequences ────────────────────────────────────
+    const SETUP_MESSAGES = [
+      "My name is Aryan. I'm building a B2B SaaS product.",
+      "We use PostgreSQL for our main database and Redis for caching.",
+      "My team only writes TypeScript. We never use Python.",
+      "Last week I fixed a nasty race condition in our auth service.",
+      "Our biggest customer is a fintech company with 50k users.",
+    ];
+
+    const FILLER_MESSAGES = [
+      "Can you explain the trade-offs between SQL and NoSQL databases in detail?",
+      "How does async/await work under the hood in JavaScript? Walk me through the event loop.",
+      "What are the main differences between REST and GraphQL, and when should I use each?",
+      "Explain microservices architecture — benefits, drawbacks, and when it makes sense.",
+      "What are the most common security vulnerabilities in web apps and how do I prevent them?",
+      "How does database indexing work, and what are the different types of indexes?",
+      "Explain the CAP theorem and how it applies to distributed systems design.",
+      "What's the difference between authentication and authorisation, and how should I implement both?",
+      "How does garbage collection work in modern runtimes like V8?",
+      "What are the pros and cons of TypeScript versus plain JavaScript for a growing codebase?",
+      "How do I implement rate limiting in a REST API effectively?",
+      "Explain the difference between horizontal and vertical scaling with examples.",
+      "What is eventual consistency and when is it acceptable in production systems?",
+      "How does a content delivery network work and when should I use one?",
+      "What are the trade-offs of using an ORM versus writing raw SQL?",
+      "Explain how JWT tokens work and what their security implications are.",
+      "What is the difference between a message queue and a pub/sub system?",
+      "How do I design an API for pagination efficiently at scale?",
+      "What are the SOLID principles and why do they matter in practice?",
+      "Explain the difference between concurrency and parallelism with real examples.",
+    ];
+
+    // 5 setup → 20 filler → 3 recall at the end (no recall mid-demo)
+    function buildDemoPlan() {
+      const plan = [];
+
+      // Turns 1-5: introduce name, stack, language, bug, customer
+      for (let i = 0; i < 5; i++) {
+        plan.push({ text: SETUP_MESSAGES[i] });
+      }
+
+      // Turns 6-25: filler (all 20, no recall in between)
+      for (let i = 0; i < 20; i++) {
+        plan.push({ text: FILLER_MESSAGES[i] });
+      }
+
+      // Turn 26: recall — database
+      plan.push({ text: "By the way, what database are we using in our stack?" });
+
+      // Turn 27: recall — language
+      plan.push({ text: "And what programming language does my team work in?" });
+
+      // Turn 28: grounding — contradiction
+      plan.push({ text: "Actually we switched to MongoDB last month." });
+
+      return plan; // 28 turns
+    }
+
+    // ── Run Demo ──────────────────────────────────────────
+    btnDemo.addEventListener('click', async () => {
+      if (demoRunning) return;
+
+      const ok = confirm('This will reset memories and run the 28-turn demo. Continue?');
+      if (!ok) return;
+
+      // Reset first
+      await doReset();
+
+      demoRunning = true;
+      btnDemo.disabled = true;
+      btnReset.disabled = true;
+      msgInput.disabled = true;
+      btnSend.disabled = true;
+      demoStatus.classList.add('visible');
+
+      const plan = buildDemoPlan();
+
+      for (let i = 0; i < plan.length; i++) {
+        const turn = i + 1;
+        demoStatusText.textContent = `Demo running… Turn ${turn}/${plan.length}`;
+
+        await delay(1500);
+        await sendMessage(plan[i].text);
+      }
+
+      // Done
+      demoRunning = false;
+      btnDemo.disabled = false;
+      btnReset.disabled = false;
+      msgInput.disabled = false;
+      btnSend.disabled = false;
+      demoStatus.classList.remove('visible');
+      msgInput.focus();
+    });
+
+    // ── Initial memory load ────────────────────────────────
+    refreshMemories([]);
+  </script>
+</body>
+</html>
